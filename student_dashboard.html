@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard — CMS Portal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #080c20;
+      --sidebar: #0b1030;
+      --card: #0f1535;
+      --electric: #3d5afe;
+      --cyan: #00e5ff;
+      --gold: #ffd740;
+      --success: #00e676;
+      --warning: #ffab40;
+      --error: #ff5252;
+      --white: #e8eeff;
+      --muted: #6b7599;
+      --border: rgba(255,255,255,0.07);
+      --sidebar-w: 260px;
+    }
+    body { background: var(--navy); font-family: 'DM Sans', sans-serif; color: var(--white); min-height: 100vh; display: flex; }
+
+    /* SIDEBAR */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .logo-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--electric), var(--cyan));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 800;
+      font-family: 'Syne', sans-serif;
+      color: white;
+    }
+    .logo-text { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; color: var(--white); }
+    .logo-sub { font-size: 0.7rem; color: var(--muted); }
+    .student-profile-mini {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(61,90,254,0.1);
+      border-radius: 10px;
+      border: 1px solid rgba(61,90,254,0.2);
+    }
+    .avatar {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--electric), #1565c0);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700;
+      font-family: 'Syne', sans-serif;
+      color: white; flex-shrink: 0;
+    }
+    .profile-name { font-size: 0.85rem; font-weight: 600; }
+    .profile-sub { font-size: 0.72rem; color: var(--muted); }
+
+    .nav-section {
+      padding: 1rem 0.75rem;
+      flex: 1;
+    }
+    .nav-label {
+      font-size: 0.68rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0 0.75rem;
+      margin: 1rem 0 0.4rem;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem;
+      padding: 0.75rem 0.75rem;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 500;
+      position: relative;
+      margin-bottom: 2px;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--white); }
+    .nav-item.active { background: rgba(61,90,254,0.15); color: var(--electric); }
+    .nav-item.active::before {
+      content: '';
+      position: absolute; left: 0; top: 20%; bottom: 20%;
+      width: 3px; background: var(--electric);
+      border-radius: 0 3px 3px 0;
+    }
+    .nav-badge {
+      margin-left: auto;
+      background: var(--error);
+      color: white;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 20px;
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .btn-logout {
+      width: 100%;
+      padding: 0.7rem;
+      background: rgba(255,82,82,0.1);
+      border: 1px solid rgba(255,82,82,0.2);
+      border-radius: 8px;
+      color: var(--error);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-logout:hover { background: rgba(255,82,82,0.2); }
+
+    /* MAIN */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      display: flex; flex-direction: column;
+      min-height: 100vh;
+    }
+    .topbar {
+      background: rgba(11,16,48,0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .page-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 700; }
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .notif-btn {
+      position: relative;
+      width: 38px; height: 38px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 1.1rem;
+    }
+    .notif-btn:hover { background: rgba(255,255,255,0.1); }
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 8px; height: 8px;
+      background: var(--error);
+      border-radius: 50%;
+      border: 2px solid var(--sidebar);
+    }
+
+    .content { padding: 2rem; flex: 1; }
+
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* STATS GRID */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      opacity: 0.08;
+      transform: translate(20px, -20px);
+    }
+    .stat-card.blue::before { background: var(--electric); }
+    .stat-card.cyan::before { background: var(--cyan); }
+    .stat-card.warning::before { background: var(--warning); }
+    .stat-card.success::before { background: var(--success); }
+
+    .stat-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+    .stat-value {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 0.25rem;
+    }
+    .stat-label { color: var(--muted); font-size: 0.8rem; }
+
+    /* CARDS */
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: var(--white);
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* COMPLAINT FORM */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-full { grid-column: 1 / -1; }
+    .field-group { margin-bottom: 0; }
+    .field-group label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+    .field-group input, .field-group select, .field-group textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--white);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .field-group select option { background: #0f1535; }
+    .field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+      border-color: var(--electric);
+      box-shadow: 0 0 0 3px rgba(61,90,254,0.12);
+    }
+    .field-group textarea { resize: vertical; min-height: 100px; }
+
+    .priority-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .priority-btn {
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+    .priority-btn.low.selected { background: rgba(0,230,118,0.15); border-color: var(--success); color: var(--success); }
+    .priority-btn.medium.selected { background: rgba(255,171,64,0.15); border-color: var(--warning); color: var(--warning); }
+    .priority-btn.high.selected { background: rgba(255,82,82,0.15); border-color: var(--error); color: var(--error); }
+
+    .btn-primary {
+      padding: 0.8rem 2rem;
+      background: linear-gradient(135deg, var(--electric), #1565c0);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(61,90,254,0.4); }
+
+    /* COMPLAINTS TABLE */
+    .complaints-filter {
+      display: flex; gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-chip {
+      padding: 0.35rem 0.9rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+    }
+    .filter-chip.active {
+      background: rgba(61,90,254,0.15);
+      border-color: rgba(61,90,254,0.4);
+      color: var(--electric);
+    }
+
+    .complaints-list { display: flex; flex-direction: column; gap: 0.75rem; }
+    .complaint-item {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    .complaint-item:hover { border-color: rgba(61,90,254,0.3); background: rgba(61,90,254,0.05); }
+
+    .complaint-cat-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .complaint-info .cid { font-size: 0.72rem; color: var(--muted); margin-bottom: 0.2rem; }
+    .complaint-info .csubject { font-weight: 500; font-size: 0.9rem; }
+    .complaint-info .cmeta { font-size: 0.75rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+    .status-pending { background: rgba(255,171,64,0.15); color: var(--warning); border: 1px solid rgba(255,171,64,0.3); }
+    .status-in_progress { background: rgba(61,90,254,0.15); color: #82b1ff; border: 1px solid rgba(61,90,254,0.3); }
+    .status-resolved { background: rgba(0,230,118,0.12); color: var(--success); border: 1px solid rgba(0,230,118,0.25); }
+    .status-rejected { background: rgba(255,82,82,0.12); color: var(--error); border: 1px solid rgba(255,82,82,0.25); }
+
+    .priority-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .priority-low { background: var(--success); }
+    .priority-medium { background: var(--warning); }
+    .priority-high { background: var(--error); }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow-y: auto;
+      animation: slideUp 0.3s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.3rem; }
+    .detail-row { display: flex; justify-content: space-between; padding: 0.6rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .detail-row:last-child { border: none; }
+    .detail-key { color: var(--muted); }
+    .response-box {
+      background: rgba(0,230,118,0.06);
+      border: 1px solid rgba(0,230,118,0.15);
+      border-radius: 8px;
+      padding: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--success);
+      margin-top: 1rem;
+    }
+
+    /* NOTIFICATIONS */
+    .notif-item {
+      display: flex; gap: 0.75rem; align-items: flex-start;
+      padding: 0.9rem; border-radius: 10px;
+      border: 1px solid var(--border);
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+    .notif-item.unread { background: rgba(61,90,254,0.06); border-color: rgba(61,90,254,0.2); }
+    .notif-dot-ui { width: 8px; height: 8px; border-radius: 50%; background: var(--electric); flex-shrink: 0; margin-top: 5px; }
+    .notif-msg { font-size: 0.85rem; }
+    .notif-time { font-size: 0.72rem; color: var(--muted); margin-top: 0.2rem; }
+
+    /* PROFILE */
+    .profile-header {
+      display: flex; align-items: center; gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .profile-avatar-lg {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--electric), #1565c0);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem; font-weight: 800;
+      color: white;
+    }
+    .profile-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .profile-field {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+    .profile-field-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .profile-field-value { font-size: 0.9rem; font-weight: 500; margin-top: 0.2rem; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; top: 1.5rem; right: 1.5rem;
+      padding: 0.9rem 1.4rem;
+      border-radius: 10px; font-size: 0.88rem;
+      z-index: 9999; max-width: 320px;
+      transform: translateX(200%);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .toast.show { transform: translateX(0); }
+    .toast.success { background: rgba(105,240,174,0.12); border: 1px solid #69f0ae; color: #69f0ae; }
+    .toast.error { background: rgba(255,82,82,0.12); border: 1px solid #ff5252; color: #ff5252; }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.9rem; }
+
+    .loading-dots { display: inline-flex; gap: 4px; }
+    .loading-dots span { width: 6px; height: 6px; background: white; border-radius: 50%; animation: blink 1s infinite; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes blink { 0%,80%,100% { opacity: 0.2; } 40% { opacity: 1; } }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-row">
+      <div class="logo-icon">C</div>
+      <div>
+        <div class="logo-text">CMS Portal</div>
+        <div class="logo-sub">Student Module</div>
+      </div>
+    </div>
+    <div class="student-profile-mini">
+      <div class="avatar" id="sidebarAvatar">?</div>
+      <div>
+        <div class="profile-name" id="sidebarName">{{ user_name }}</div>
+        <div class="profile-sub" id="sidebarDept">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" onclick="showPage('dashboard')">
+      <span>🏠</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showPage('submit')">
+      <span>📝</span> Submit Complaint
+    </div>
+    <div class="nav-item" onclick="showPage('complaints')">
+      <span>📋</span> My Complaints
+    </div>
+
+    <div class="nav-label">Account</div>
+    <div class="nav-item" onclick="showPage('notifications')">
+      <span>🔔</span> Notifications
+      <span class="nav-badge" id="notifBadgeSidebar" style="display:none">0</span>
+    </div>
+    <div class="nav-item" onclick="showPage('profile')">
+      <span>👤</span> My Profile
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <button class="btn-logout" onclick="window.location.href='/logout'">🚪 Sign Out</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div class="page-title" id="pageTitle">Dashboard</div>
+    <div class="topbar-right">
+      <div class="notif-btn" onclick="showPage('notifications')">
+        🔔
+        <div class="notif-dot" id="notifDot" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- DASHBOARD PAGE -->
+    <div id="page-dashboard" class="page active">
+      <div class="stats-grid">
+        <div class="stat-card blue">
+          <div class="stat-icon">📋</div>
+          <div class="stat-value" id="statTotal">-</div>
+          <div class="stat-label">Total Complaints</div>
+        </div>
+        <div class="stat-card warning">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value" id="statPending">-</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card cyan">
+          <div class="stat-icon">🔄</div>
+          <div class="stat-value" id="statProgress">-</div>
+          <div class="stat-label">In Progress</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="statResolved">-</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Recent Complaints</div>
+        <div id="recentComplaints">
+          <div class="empty-state"><div class="empty-icon">📭</div><p>No complaints yet</p></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Quick Submit</div>
+        <p style="color:var(--muted); font-size:0.88rem; margin-bottom:1rem;">Have an issue? Submit a new complaint and we'll address it promptly.</p>
+        <button class="btn-primary" onclick="showPage('submit')">+ New Complaint</button>
+      </div>
+    </div>
+
+    <!-- SUBMIT PAGE -->
+    <div id="page-submit" class="page">
+      <div class="card">
+        <div class="section-title">Submit New Complaint</div>
+        <div class="form-grid">
+          <div class="field-group">
+            <label>Category *</label>
+            <select id="fCategory">
+              <option value="">Select Category</option>
+              <option value="Academic">📚 Academic</option>
+              <option value="Infrastructure">🏗️ Infrastructure</option>
+              <option value="Faculty">👨‍🏫 Faculty</option>
+              <option value="Hostel">🏠 Hostel</option>
+              <option value="Library">📖 Library</option>
+              <option value="Transport">🚌 Transport</option>
+              <option value="Canteen">🍽️ Canteen</option>
+              <option value="Administration">🏛️ Administration</option>
+              <option value="Other">❓ Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>Priority *</label>
+            <div class="priority-row" style="padding-top:0.3rem">
+              <button class="priority-btn low selected" onclick="selectPriority('low')">🟢 Low</button>
+              <button class="priority-btn medium" onclick="selectPriority('medium')">🟡 Medium</button>
+              <button class="priority-btn high" onclick="selectPriority('high')">🔴 High</button>
+            </div>
+          </div>
+          <div class="field-group form-full">
+            <label>Subject *</label>
+            <input type="text" id="fSubject" placeholder="Brief subject of your complaint" />
+          </div>
+          <div class="field-group form-full">
+            <label>Description *</label>
+            <textarea id="fDescription" placeholder="Describe your complaint in detail. Include relevant dates, locations, and any supporting information..."></textarea>
+          </div>
+        </div>
+        <div style="margin-top:1.25rem; display:flex; gap:0.75rem;">
+          <button class="btn-primary" id="submitBtn" onclick="submitComplaint()">Submit Complaint</button>
+          <button onclick="clearForm()" style="padding:0.8rem 1.5rem; background:transparent; border:1px solid var(--border); border-radius:8px; color:var(--muted); cursor:pointer; font-family:'DM Sans',sans-serif; font-size:0.9rem; transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,255,255,0.3)'" onmouseout="this.style.borderColor='var(--border)'">Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLAINTS PAGE -->
+    <div id="page-complaints" class="page">
+      <div class="card">
+        <div class="section-title">My Complaints</div>
+        <div class="complaints-filter">
+          <button class="filter-chip active" onclick="filterComplaints('all', this)">All</button>
+          <button class="filter-chip" onclick="filterComplaints('pending', this)">Pending</button>
+          <button class="filter-chip" onclick="filterComplaints('in_progress', this)">In Progress</button>
+          <button class="filter-chip" onclick="filterComplaints('resolved', this)">Resolved</button>
+        </div>
+        <div class="complaints-list" id="complaintsList">
+          <div class="empty-state"><div class="empty-icon">📭</div><p>No complaints found</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS PAGE -->
+    <div id="page-notifications" class="page">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+          <div class="section-title" style="margin-bottom:0">Notifications</div>
+          <button onclick="markNotificationsRead()" style="background:none; border:none; color:var(--electric); cursor:pointer; font-size:0.82rem; font-family:'DM Sans',sans-serif;">Mark all read</button>
+        </div>
+        <div id="notifList">
+          <div class="empty-state"><div class="empty-icon">🔔</div><p>No notifications yet</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE PAGE -->
+    <div id="page-profile" class="page">
+      <div class="card">
+        <div class="profile-header">
+          <div class="profile-avatar-lg" id="profileAvatar">?</div>
+          <div>
+            <div style="font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:700;" id="profileName">-</div>
+            <div style="color:var(--muted); font-size:0.85rem; margin-top:0.2rem;" id="profileDept">-</div>
+          </div>
+        </div>
+        <div class="profile-detail-grid" id="profileGrid">
+          <div class="profile-field"><div class="profile-field-label">Student ID</div><div class="profile-field-value" id="pStudentId">-</div></div>
+          <div class="profile-field"><div class="profile-field-label">Email</div><div class="profile-field-value" id="pEmail">-</div></div>
+          <div class="profile-field"><div class="profile-field-label">Department</div><div class="profile-field-value" id="pDept">-</div></div>
+          <div class="profile-field"><div class="profile-field-label">Year</div><div class="profile-field-value" id="pYear">-</div></div>
+          <div class="profile-field"><div class="profile-field-label">Phone</div><div class="profile-field-value" id="pPhone">-</div></div>
+          <div class="profile-field"><div class="profile-field-label">Joined</div><div class="profile-field-value" id="pJoined">-</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- COMPLAINT DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div style="font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:700;" id="modalTitle">Complaint Details</div>
+        <div style="color:var(--muted); font-size:0.8rem; margin-top:0.2rem;" id="modalId">-</div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+  let allComplaints = [];
+  let selectedPriority = 'low';
+  const pageTitles = { dashboard: 'Dashboard', submit: 'Submit Complaint', complaints: 'My Complaints', notifications: 'Notifications', profile: 'My Profile' };
+
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + name).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.textContent.toLowerCase().includes(pageTitles[name].toLowerCase().split(' ')[0].toLowerCase())) n.classList.add('active');
+    });
+    document.getElementById('pageTitle').textContent = pageTitles[name];
+    if (name === 'complaints') loadComplaints();
+    if (name === 'notifications') loadNotifications();
+    if (name === 'profile') loadProfile();
+  }
+
+  function showToast(msg, type) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `toast ${type} show`;
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  function selectPriority(p) {
+    selectedPriority = p;
+    document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('selected'));
+    event.target.classList.add('selected');
+  }
+
+  async function loadStats() {
+    const res = await fetch('/api/student/complaints/stats');
+    const data = await res.json();
+    document.getElementById('statTotal').textContent = data.total;
+    document.getElementById('statPending').textContent = data.pending;
+    document.getElementById('statProgress').textContent = data.in_progress;
+    document.getElementById('statResolved').textContent = data.resolved;
+  }
+
+  async function loadRecent() {
+    const res = await fetch('/api/student/complaints');
+    const data = await res.json();
+    const container = document.getElementById('recentComplaints');
+    if (!data.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No complaints yet. Submit your first complaint!</p></div>';
+      return;
+    }
+    const recent = data.slice(0, 3);
+    container.innerHTML = '<div class="complaints-list">' + recent.map(c => buildComplaintItem(c)).join('') + '</div>';
+  }
+
+  async function loadComplaints() {
+    const res = await fetch('/api/student/complaints');
+    allComplaints = await res.json();
+    renderComplaints(allComplaints);
+  }
+
+  function renderComplaints(list) {
+    const container = document.getElementById('complaintsList');
+    if (!list.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>No complaints found</p></div>';
+      return;
+    }
+    container.innerHTML = list.map(c => buildComplaintItem(c)).join('');
+  }
+
+  const catIcons = { Academic:'📚', Infrastructure:'🏗️', Faculty:'👨‍🏫', Hostel:'🏠', Library:'📖', Transport:'🚌', Canteen:'🍽️', Administration:'🏛️', Other:'❓' };
+  const catColors = { Academic:'rgba(61,90,254,0.15)', Infrastructure:'rgba(255,171,64,0.15)', Faculty:'rgba(0,229,255,0.12)', Hostel:'rgba(105,240,174,0.12)', Library:'rgba(255,215,64,0.12)', Transport:'rgba(200,100,255,0.12)', Canteen:'rgba(255,100,100,0.12)', Administration:'rgba(100,200,255,0.12)', Other:'rgba(200,200,200,0.08)' };
+
+  function buildComplaintItem(c) {
+    return `<div class="complaint-item" onclick="openModal(${c.id})">
+      <div class="complaint-cat-icon" style="background:${catColors[c.category]||'rgba(255,255,255,0.05)'}">
+        ${catIcons[c.category]||'❓'}
+      </div>
+      <div class="complaint-info">
+        <div class="cid">${c.complaint_id}</div>
+        <div class="csubject">${c.subject}</div>
+        <div class="cmeta">${c.category} · ${formatDate(c.created_at)}</div>
+      </div>
+      <span class="status-badge status-${c.status}">${c.status.replace('_',' ')}</span>
+      <div class="priority-dot priority-${c.priority}"></div>
+    </div>`;
+  }
+
+  function filterComplaints(status, btn) {
+    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    if (status === 'all') renderComplaints(allComplaints);
+    else renderComplaints(allComplaints.filter(c => c.status === status));
+  }
+
+  async function openModal(id) {
+    const res = await fetch('/api/student/complaints');
+    const data = await res.json();
+    const c = data.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('modalTitle').textContent = c.subject;
+    document.getElementById('modalId').textContent = c.complaint_id;
+    document.getElementById('modalContent').innerHTML = `
+      <div class="detail-row"><span class="detail-key">Category</span><span>${catIcons[c.category]} ${c.category}</span></div>
+      <div class="detail-row"><span class="detail-key">Priority</span><span class="priority-dot priority-${c.priority}" style="display:inline-block; margin-right:5px"></span>${c.priority}</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="status-badge status-${c.status}">${c.status.replace('_',' ')}</span></div>
+      <div class="detail-row"><span class="detail-key">Submitted</span><span>${formatDate(c.created_at)}</span></div>
+      ${c.updated_at !== c.created_at ? `<div class="detail-row"><span class="detail-key">Last Updated</span><span>${formatDate(c.updated_at)}</span></div>` : ''}
+      ${c.resolved_at ? `<div class="detail-row"><span class="detail-key">Resolved On</span><span>${formatDate(c.resolved_at)}</span></div>` : ''}
+      <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border);">
+        <div style="color:var(--muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:0.5rem;">Description</div>
+        <div style="font-size:0.88rem; line-height:1.6;">${c.description}</div>
+      </div>
+      ${c.admin_response ? `<div class="response-box"><strong>Admin Response:</strong><br>${c.admin_response}</div>` : ''}
+    `;
+    document.getElementById('detailModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('detailModal').classList.remove('open');
+  }
+
+  async function submitComplaint() {
+    const category = document.getElementById('fCategory').value;
+    const subject = document.getElementById('fSubject').value.trim();
+    const description = document.getElementById('fDescription').value.trim();
+    if (!category || !subject || !description) return showToast('Please fill all required fields', 'error');
+
+    const btn = document.getElementById('submitBtn');
+    btn.innerHTML = '<span class="loading-dots"><span></span><span></span><span></span></span>';
+    btn.disabled = true;
+
+    const res = await fetch('/api/student/complaint', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category, subject, description, priority: selectedPriority })
+    });
+    const data = await res.json();
+    btn.textContent = 'Submit Complaint';
+    btn.disabled = false;
+
+    if (data.success) {
+      showToast(`Complaint ${data.complaint_id} submitted successfully!`, 'success');
+      clearForm();
+      loadStats();
+      loadRecent();
+    } else {
+      showToast('Failed to submit complaint', 'error');
+    }
+  }
+
+  function clearForm() {
+    document.getElementById('fCategory').value = '';
+    document.getElementById('fSubject').value = '';
+    document.getElementById('fDescription').value = '';
+    selectPriority('low');
+    document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelector('.priority-btn.low').classList.add('selected');
+  }
+
+  async function loadNotifications() {
+    const res = await fetch('/api/student/notifications');
+    const data = await res.json();
+    updateNotifUI(data.unread);
+    const container = document.getElementById('notifList');
+    if (!data.notifications.length) {
+      container.innerHTML = '<div class="empty-state"><div class="empty-icon">🔔</div><p>No notifications yet</p></div>';
+      return;
+    }
+    container.innerHTML = data.notifications.map(n => `
+      <div class="notif-item ${n.is_read ? '' : 'unread'}">
+        <div class="notif-dot-ui" style="${n.is_read ? 'opacity:0.3' : ''}"></div>
+        <div>
+          <div class="notif-msg">${n.message}</div>
+          <div class="notif-time">${formatDate(n.created_at)}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function markNotificationsRead() {
+    await fetch('/api/student/notifications/read', { method: 'POST' });
+    document.getElementById('notifDot').style.display = 'none';
+    document.getElementById('notifBadgeSidebar').style.display = 'none';
+    loadNotifications();
+  }
+
+  function updateNotifUI(count) {
+    const dot = document.getElementById('notifDot');
+    const badge = document.getElementById('notifBadgeSidebar');
+    if (count > 0) {
+      dot.style.display = 'block';
+      badge.style.display = 'inline';
+      badge.textContent = count;
+    } else {
+      dot.style.display = 'none';
+      badge.style.display = 'none';
+    }
+  }
+
+  async function loadProfile() {
+    const res = await fetch('/api/student/profile');
+    const p = await res.json();
+    const initials = p.name.split(' ').map(n=>n[0]).join('').toUpperCase();
+    document.getElementById('profileAvatar').textContent = initials;
+    document.getElementById('profileName').textContent = p.name;
+    document.getElementById('profileDept').textContent = `${p.department} · Year ${p.year}`;
+    document.getElementById('pStudentId').textContent = p.student_id;
+    document.getElementById('pEmail').textContent = p.email;
+    document.getElementById('pDept').textContent = p.department;
+    document.getElementById('pYear').textContent = `Year ${p.year}`;
+    document.getElementById('pPhone').textContent = p.phone || 'Not provided';
+    document.getElementById('pJoined').textContent = formatDate(p.created_at);
+    document.getElementById('sidebarAvatar').textContent = initials;
+    document.getElementById('sidebarDept').textContent = p.department;
+  }
+
+  function formatDate(str) {
+    if (!str) return '-';
+    const d = new Date(str);
+    return d.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+  }
+
+  // Init
+  (async function init() {
+    await loadStats();
+    await loadRecent();
+    const nRes = await fetch('/api/student/notifications');
+    const nData = await nRes.json();
+    updateNotifUI(nData.unread);
+    loadProfile();
+    setInterval(async () => {
+      const r = await fetch('/api/student/notifications');
+      const d = await r.json();
+      updateNotifUI(d.unread);
+    }, 30000);
+  })();
+
+  document.getElementById('detailModal').addEventListener('click', e => {
+    if (e.target === document.getElementById('detailModal')) closeModal();
+  });
+</script>
+</body>
+</html>
